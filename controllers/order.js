@@ -20,7 +20,7 @@ const { pushNotificationStatic } = require("../utils/pushNotif");
 exports.orderTruck = asyncHandler(async (req, res, next) => {
   
   const me = await Order.find({ "requster._id": req.user._id });
-  
+  console.log('profile>>>>>>>>>>' , req.user)
   if (me.length) {
     console.log("hi");
     const last = me[me.length - 1];
@@ -72,6 +72,7 @@ exports.orderTruck = asyncHandler(async (req, res, next) => {
     username: req.user.username,
     pictureProfile: req.user.pictureProfile,
   };
+  console.log(requster)
 
   if (favoriteOrogin) {
     const org = { ...origin, nameAddress: origin.address };

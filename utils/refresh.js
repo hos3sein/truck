@@ -31,6 +31,7 @@ exports.refreshTruck = async () => {
       },
     });
     const response = await rawResponse.json();
+    console.log('truck refresh resault >>> ', response)
     // console.log("response refreshTruck accept", response);
   } catch (error) {
     console.log("error", error);

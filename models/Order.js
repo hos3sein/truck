@@ -180,7 +180,13 @@ const OrderSchema = new mongoose.Schema(
 
     requsterPaymentInvoiceNumber:String,
 
-    driverPaymentInvoiceNumber:String
+    driverPaymentInvoiceNumber:String,
+    
+    canceler : {
+      admin : {type : String},
+      number : {type : String},
+      cause : {type : String}
+    },
   },
   { timestamps: true }
 );

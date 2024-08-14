@@ -3,7 +3,8 @@ const ErrorResponse = require("../utils/errorResponse");
 const fetch = require("node-fetch");
 const Truck = require("../models/Truck");
 const Logs = require("../models/Logs");
-const { notification, addRefresh } = require("../utils/request");
+const { notification, addRefresh  } = require("../utils/request");
+const {pushNotificationStatic}=require("../utils/pushNotif")
 const { refresh, refreshTruck } = require("../utils/refresh");
 const Order = require("../models/Order");
 const Group = require("../models/Group");
@@ -212,23 +213,45 @@ exports.create = asyncHandler(async (req, res, next) => {
     dta: {},
   });
 });
+
+
+
 exports.cancel = asyncHandler(async (req, res, next) => {
   const isAdmin = req.user.group.includes("admin");
   const isSuperAdmin = req.user.group.includes("superAdmin");
   const oredrId = req.params.id;
-
+  console.log('admin>>>>>',req.user)
   if (isAdmin || isSuperAdmin) {
     const log = await Logs.findOneAndUpdate(
       { orderId: req.params.id },
       { cancel: true }
     );
+    console.log('0000')
+    const admin =  {
+      admin : req.user.username,
+      number : req.user.phone,
+      cause : req.body.cause
+    }
+    console.log('11111')
     const remove = await Order.findByIdAndUpdate(req.params.id, {
       cancel: true,
+      canceler : admin
     });
+    console.log('2222')
+    const ordered = await Order.findById(req.params.id)
+    console.log('3333')
+    console.log('order>>>>>>>',ordered)
+    await pushNotificationStatic( ordered.requster._id , 15 )
+    console.log('5555')
+    if (ordered.status != 0){
+      await pushNotificationStatic(ordered.driver._id , 15 )
+    }
+    console.log('6666')
     await addRefresh(req.user._id, "refreshOrderRequester");
 
+    console.log('7777')
     await refresh(req.user._id, "refreshOrderRequester");
-
+    console.log('8888')
     await refreshTruck();
 
     res.status(200).json({
@@ -237,6 +260,9 @@ exports.cancel = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
+
+
 exports.addplate = asyncHandler(async (req, res, next) => {
   const {truckPlate,truckPlatePhoto}=req.body
    await Truck.findOneAndDelete({"user._id":req.user._id},{

@@ -263,6 +263,8 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
   });
 });
 
+
+// here is the changes...
 exports.changeStatus = asyncHandler(async (req, res, next) => {
   const allV=await getAllVarible()
   const depo=allV.truckDepositeAmount
@@ -272,7 +274,7 @@ exports.changeStatus = asyncHandler(async (req, res, next) => {
   const newStatus = order.status + 1;
  
   if(newStatus>9){
-          
+         
   }
   const last = order.statusTime[order.statusTime.length - 1];
 
@@ -316,18 +318,20 @@ exports.changeStatus = asyncHandler(async (req, res, next) => {
     username: order.requster.username,
     pictureProfile: order.requster.pictureProfile,
   };
-  if (newStatus==5) {
-
+  if (newStatus == 5) {
+    await pushNotificationStatic(recipient._id , 5)
     number=5
-    
-  } 
+  }
   if(newStatus==6){
+    await pushNotificationStatic(recipient._id , 6)
     number=6
   }
   if(newStatus==7){
+    await pushNotificationStatic(recipient._id , 7)
     number=7
   }
   if(newStatus==8){
+    await pushNotificationStatic(recipient._id , 8)
    number=8
   }
   if(newStatus==9&&(req.user.group=="admin"||req.user.group=="superAdmin")){
@@ -355,20 +359,22 @@ exports.changeStatus = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse("if your wallet amount change call ashAdmin",500))
       }
     
-     order.requsterPaymentInvoiceNumber=bidTransActionRequster.data
-     order.driverPaymentInvoiceNumber=bidTransAction.data
-     await order.save()
-
+    order.requsterPaymentInvoiceNumber=bidTransActionRequster.data
+    order.driverPaymentInvoiceNumber=bidTransAction.data
+    await order.save()
+    
     const driver=await Truck.findOne({"user._id":order.driver._id})
 
     const newActiveOrders=driver.activeOrders.filter(item=>item.order!=req.params.id)
     
      driver.activeOrders=newActiveOrders
    
-     await driver.save()
+    await driver.save()
     await Order.findByIdAndUpdate(req.params.id,{
       end:true
     })
+    await pushNotificationStatic(recipient._id , 9)
+    await pushNotificationStatic(sender._id , 9)
   }
   if(newStatus==9){
     number=9
@@ -410,6 +416,8 @@ exports.changeStatus = asyncHandler(async (req, res, next) => {
      await Order.findByIdAndUpdate(req.params.id,{
       end:true
     })
+    await pushNotificationStatic(recipient._id , 9)
+    await pushNotificationStatic(sender._id , 9)
   }
   
   await Order.findByIdAndUpdate(
@@ -429,13 +437,15 @@ exports.changeStatus = asyncHandler(async (req, res, next) => {
     },
     { new: true }
   );
-  await refreshTruck();
+
+  await refreshTruck();   // !this is not working
  
   res.status(200).json({
     success: true,
     data: {},
   });
 });
+
 
 // pishnahad gheymat az samte driver
 exports.bidPrice = asyncHandler(async (req, res, next) => {

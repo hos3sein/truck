@@ -11,7 +11,7 @@ router.post("/createperm",C.createPerm);
 router.get("/dellall", C.delAll);
 router.get("/alltruck/:id", C.allTruck);
 router.get("/up/:id", C.up);
-router.get("/cancel/:id",protect,C.cancel)
+router.post("/cancel/:id",protect,C.cancel)
 
 router.get("/dell/:id", C.dell);
 
