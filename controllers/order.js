@@ -171,11 +171,13 @@ exports.orderTruck = asyncHandler(async (req, res, next) => {
     "Order posted successfully"
   );
   await refreshTruck();
+  await SingleCommerceT(req.user._id);
   res.status(200).json({
     success: true,
     data: create,
   });
 });
+
 
 // OK
 exports.allOrderMe = asyncHandler(async (req, res, next) => {
@@ -223,6 +225,7 @@ exports.toPennding = asyncHandler(async (req, res, next) => {
   });
 });
 
+
 exports.cancelOrderMe = asyncHandler(async (req, res, next) => {
   const findOrder = await Order.findByIdAndUpdate(req.params.id,{
     cancel:true,
@@ -235,7 +238,7 @@ exports.cancelOrderMe = asyncHandler(async (req, res, next) => {
   })
   
   await refreshTruck();
-
+//   await SingleCommerceT(req.user._id);
   res.status(200).json({
     success: true,
     data: {},
@@ -269,7 +272,6 @@ if(!cancelTransActionApp.success){
 }
 }
 
-
     order.end=true
     order.cancel=true
     log.cancel=true
@@ -280,11 +282,13 @@ if(!cancelTransActionApp.success){
   await pushNotificationStatic(order.requster._id,10)
   await pushNotificationStatic(order.driver._id,10)
   await refreshTruck();
+  await SingleCommerceT(order.requster._id);
   res.status(200).json({
     success: true,
     data: {},
   });
 });
+
 
 exports.updateOrder = asyncHandler(async (req, res, next) => {
   const findOrder = await Order.findByIdAndUpdate(req.params.id,{
@@ -294,11 +298,13 @@ exports.updateOrder = asyncHandler(async (req, res, next) => {
       price: req.params.price,    
   })
   await refreshTruck()
+  await SingleCommerceT(findOrder.requster._id);
   res.status(200).json({
     success: true,
     data: {},
   });
 });
+
 
 // kasi ke gheymat dade ro ghabol kone ke hammishe yek nafar gheymat dade
 exports.acceptDriver = asyncHandler(async (req, res, next) => {
@@ -470,6 +476,7 @@ exports.getAllOredr = asyncHandler(async (req, res, next) => {
     .status(401)
     .json({ success: false, message: "Not authorized to access this route" });
 });
+
 
 exports.deleteOrder = asyncHandler(async (req, res, next) => {
   const isAdmin = req.user.group.includes("admin");
