@@ -5,7 +5,7 @@ const Truck = require("../models/Truck");
 const Logs = require("../models/Logs");
 const {walletUpdater,walletUpdaterApp}=require("../utils/wallet")
 const {pushNotificationStatic}=require("../utils/pushNotif")
-const { notification, addRefresh,pushNotification,getAllVarible } = require("../utils/request");
+const { notification, addRefresh,pushNotification,getAllVarible , newLog } = require("../utils/request");
 const { refresh, refreshTruck ,SingleCommerceT} = require("../utils/refresh");
 const moment = require("moment");
 
@@ -266,6 +266,10 @@ exports.updateProfile = asyncHandler(async (req, res, next) => {
 
 // here is the changes...
 exports.changeStatus = asyncHandler(async (req, res, next) => {
+  console.log('r>>>>>>' , req.user)
+  const admin = (req.user.group.includes("admin"))?true:false
+  const superAdmin = (req.user.group.includes("superAdmin"))?true:false
+  
   const allV=await getAllVarible()
   const depo=allV.truckDepositeAmount
   const comi=allV.appComistionAmountTruck
@@ -321,20 +325,60 @@ exports.changeStatus = asyncHandler(async (req, res, next) => {
   if (newStatus == 5) {
     await pushNotificationStatic(recipient._id , 5)
     number=5
+   if(admin || superAdmin){
+    const Log = {
+      admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole ,group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+      section : "Order Truck",
+      part : "ChangeStatus",
+      success : true,
+      description : `${req.user.username} successfully change Order's ${order.productName}'s status to "going to pickup the cargo"`,
+    }
+    await newLog(Log)
+   }
   }
   if(newStatus==6){
     await pushNotificationStatic(recipient._id , 6)
     number=6
+    if(admin || superAdmin){
+      const Log = {
+        admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole ,group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+        section : "Order Truck",
+        part : "ChangeStatus",
+        success : true,
+        description : `${req.user.username} successfully change Order's ${order.productName}'s status to "the cargo successfully picked up"`,
+      }
+      await newLog(Log)
+    }
   }
   if(newStatus==7){
     await pushNotificationStatic(recipient._id , 7)
     number=7
+    if (admin || superAdmin){
+      const Log = {
+        admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole ,group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+        section : "Order Truck",
+        part : "ChangeStatus",
+        success : true,
+        description : `${req.user.username} successfully change Order's ${order.productName}'s status to "start Nav to destination"`,
+      }
+      await newLog(Log)
+    }
   }
   if(newStatus==8){
     await pushNotificationStatic(recipient._id , 8)
    number=8
+   if (admin || superAdmin){
+    const Log = {
+      admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole ,group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+      section : "Order Truck",
+      part : "ChangeStatus",
+      success : true,
+      description : `${req.user.username} successfully change Order's ${order.productName}'s status to "deliverd the cargo to buyer by driver"`,
+    }
+    await newLog(Log)
+   }
   }
-  if(newStatus==9&&(req.user.group=="admin"||req.user.group=="superAdmin")){
+  if(newStatus==9 && (req.user.group=="admin"||req.user.group=="superAdmin")){
      number = 9
      
       // //!wallet section
@@ -375,6 +419,14 @@ exports.changeStatus = asyncHandler(async (req, res, next) => {
     })
     await pushNotificationStatic(recipient._id , 9)
     await pushNotificationStatic(sender._id , 9)
+    const Log = {
+      admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole ,group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+      section : "Order Truck",
+      part : "ChangeStatus",
+      success : true,
+      description : `${req.user.username} successfully change Order's ${order.productName}'s status from 8 to 9`,
+    }
+    await newLog(Log)
   }
   if(newStatus==9){
     number=9
@@ -445,7 +497,6 @@ exports.changeStatus = asyncHandler(async (req, res, next) => {
     data: {},
   });
 });
-
 
 // pishnahad gheymat az samte driver
 exports.bidPrice = asyncHandler(async (req, res, next) => {

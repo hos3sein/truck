@@ -74,6 +74,9 @@ app.use(helmet());
 app.use(xss());
 // Prevent http param pollution
 app.use(hpp());
+var corsOptions = {
+  origin: '*', // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
 app.use(cors());
 // Set static folder
 var public = path.join(__dirname, "public");

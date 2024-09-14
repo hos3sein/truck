@@ -3,7 +3,7 @@ const ErrorResponse = require("../utils/errorResponse");
 const fetch = require("node-fetch");
 const Truck = require("../models/Truck");
 const Logs = require("../models/Logs");
-const { notification, addRefresh  } = require("../utils/request");
+const { notification, addRefresh , newLog } = require("../utils/request");
 const {pushNotificationStatic}=require("../utils/pushNotif")
 const { refresh, refreshTruck } = require("../utils/refresh");
 const Order = require("../models/Order");
@@ -253,6 +253,15 @@ exports.cancel = asyncHandler(async (req, res, next) => {
     await refresh(req.user._id, "refreshOrderRequester");
     console.log('8888')
     await refreshTruck();
+    
+    const Log = {
+      admin : {username :req.user.username , phone : req.user.phone , adminRole : req.user?.adminRole ,group : req.user?.group , firstName : req.user?.firstName , lastName : req.user?.lastName},
+      section : "Orders",
+      part : "Cancel order",
+      success : true,
+      description : `order ${ordered.productName} successfully canceled by admin ${req.user.username}`,
+    }
+    await newLog(Log)
 
     res.status(200).json({
       success: true,
@@ -260,6 +269,8 @@ exports.cancel = asyncHandler(async (req, res, next) => {
     });
   }
 });
+
+
 
 
 
