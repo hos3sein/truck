@@ -11,14 +11,22 @@ const {
   notification,
   addRefresh,
   pushNotification,
-  getAllVarible
+  getAllVarible,getUSER
 } = require("../utils/request");
 
 const fetch = require("node-fetch");
 const { pushNotificationStatic } = require("../utils/pushNotif");
 
 exports.orderTruck = asyncHandler(async (req, res, next) => {
-  
+  const validate = await getUSER(req.user._id)
+    if (!validate.data.isActive){
+      return res.status(401).json({
+        success : false,
+        payload : {
+          error : 'the requester is not active....'
+        }
+      })
+    }
   const me = await Order.find({ "requster._id": req.user._id });
   console.log('profile>>>>>>>>>>' , req.user)
   if (me.length) {
@@ -263,7 +271,7 @@ const allV=await getAllVarible()
 const bidamount=allV.truckBidAmount*100
 if(order.status==5){
   const cancelTransAction=await walletUpdater(1,order.driver._id,bidamount,"Cancel penalty cost","Truck")
-  const cancelTransActionApp=await walletUpdaterApp(0,order.driver._id,bidamount,"Cancel penalty cost","Truck")  
+  const cancelTransActionApp=await walletUpdaterApp(1,order.driver._id,bidamount,"Cancel penalty cost","Truck")  
 if(!cancelTransAction.success){
   return next(new ErrorResponse("Wallet transaction failed",500))
 }
@@ -310,6 +318,18 @@ exports.updateOrder = asyncHandler(async (req, res, next) => {
 exports.acceptDriver = asyncHandler(async (req, res, next) => {
   //
   const order = await Order.findById(req.params.id);
+  if (order.requster._id){
+    const validate = await getUSER(order.requster._id)
+    console.log('validator....' , validate)
+    if (!validate.data.isActive){
+      return res.status(401).json({
+        success : false,
+        payload : {
+          error : 'the requester is not active....'
+        }
+      })
+    }
+  }
   if (!order) {
     return next(new ErrorResponse("order not found", 404));
   }
@@ -330,6 +350,15 @@ exports.acceptDriver = asyncHandler(async (req, res, next) => {
   const truck = await Truck.findByIdAndUpdate(truckId, {
     $push: { activeOrders: { order: req.params.id, date: order.date } },
   });
+  const validate = await getUSER(truck.user._id)
+    if (!validate.data.isActive){
+      return res.status(401).json({
+        success : false,
+        payload : {
+          error : 'the truck driver is not active....'
+        }
+      })
+    }
 
   const objDriver = {
     _id: truck.user._id,

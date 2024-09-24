@@ -5,7 +5,7 @@ const Truck = require("../models/Truck");
 const Logs = require("../models/Logs");
 const {walletUpdater,walletUpdaterApp}=require("../utils/wallet")
 const {pushNotificationStatic}=require("../utils/pushNotif")
-const { notification, addRefresh,pushNotification,getAllVarible , newLog } = require("../utils/request");
+const { notification, addRefresh,pushNotification,getAllVarible , newLog,getUSER } = require("../utils/request");
 const { refresh, refreshTruck ,SingleCommerceT} = require("../utils/refresh");
 const moment = require("moment");
 
@@ -274,7 +274,31 @@ exports.changeStatus = asyncHandler(async (req, res, next) => {
   const depo=allV.truckDepositeAmount
   const comi=allV.appComistionAmountTruck
   let number
+  
   const order = await Order.findById(req.params.id);
+  if (order.driver._id){
+    const validate = await getUSER(order.driver._id)
+    if (!validate.data.isActive){
+      return res.status(401).json({
+        success : false,
+        payload : {
+          error : 'the driver is not active....'
+        }
+      })
+    }
+  }
+
+  if (order.requster._id){
+    const validate = await getUSER(order.requster._id)
+    if (!validate.data.isActive){
+      return res.status(401).json({
+        success : false,
+        payload : {
+          error : 'the requester is not active....'
+        }
+      })
+    }
+  }
   const newStatus = order.status + 1;
  
   if(newStatus>9){
@@ -396,9 +420,9 @@ exports.changeStatus = asyncHandler(async (req, res, next) => {
       if(!bidTransAction.success||!bidTransActionComi.success){
         return next(new ErrorResponse("Wallet transaction failed",500))
       }
-      const bidTransActionRequsterApp=await walletUpdaterApp(1,order.requster._id,requsterAmount,`Truck cost for order ${order.productName}`,"truck")
-      const bidTransActionA=await walletUpdaterApp(1,req.user._id,appcomi,`App comision cost for order ${order.productName}`,"truck")
-      const bidTransActionApp=await walletUpdaterApp(0,order.driver._id,driverAmount,`Truck cost for order ${order.productName}`,"truck")
+      const bidTransActionRequsterApp=await walletUpdaterApp(0,order.requster._id,requsterAmount,`Truck cost for order ${order.productName}`,"truck")
+      const bidTransActionA=await walletUpdaterApp(0,req.user._id,appcomi,`App comision cost for order ${order.productName}`,"truck")
+      const bidTransActionApp=await walletUpdaterApp(1,order.driver._id,driverAmount,`Truck cost for order ${order.productName}`,"truck")
       if(!bidTransActionA.success||!bidTransActionRequsterApp.success||!bidTransActionApp.success){
         return next(new ErrorResponse("if your wallet amount change call ashAdmin",500))
       }
@@ -447,9 +471,9 @@ exports.changeStatus = asyncHandler(async (req, res, next) => {
       if(!bidTransAction.success||!bidTransActionComi.success){
         return next(new ErrorResponse("Wallet transaction failed",500))
       }
-      const bidTransActionRequsterApp=await walletUpdaterApp(1,order.requster._id,requsterAmount,`Truck cost for order ${order.productName}`,"truck")
-      const bidTransActionA=await walletUpdaterApp(1,req.user._id,appcomi,`App comision cost for order ${order.productName}`,"truck")
-      const bidTransActionApp=await walletUpdaterApp(0,order.driver._id,driverAmount,`Truck cost for order ${order.productName}`,"truck")
+      const bidTransActionRequsterApp=await walletUpdaterApp(0,order.requster._id,requsterAmount,`Truck cost for order ${order.productName}`,"truck")
+      const bidTransActionA=await walletUpdaterApp(0,req.user._id,appcomi,`App comision cost for order ${order.productName}`,"truck")
+      const bidTransActionApp=await walletUpdaterApp(1,order.driver._id,driverAmount,`Truck cost for order ${order.productName}`,"truck")
       if(!bidTransActionA.success||!bidTransActionRequsterApp.success||!bidTransActionApp.success){
         return next(new ErrorResponse("if your wallet amount change call ashAdmin",500))
       }
@@ -504,6 +528,26 @@ exports.bidPrice = asyncHandler(async (req, res, next) => {
   const allV=await getAllVarible()
   const bidAmount=allV.truckBidAmount*100
   const order=await Order.findById(req.params.id)
+  const validate = await getUSER(req.user._id)
+    if (!validate.data.isActive){
+      return res.status(401).json({
+        success : false,
+        payload : {
+          error : 'the requester is not active....'
+        }
+      })
+    }
+  if (order.requster._id){
+    const validate = await getUSER(order.requster._id)
+    if (!validate.data.isActive){
+      return res.status(401).json({
+        success : false,
+        payload : {
+          error : 'the requester is not active....'
+        }
+      })
+    }
+  }
   const log=await Logs.findOne({orderId:req.params.id})
   const driver=await Truck.findOne({"user._id":req.user._id})
   const newBid=req.params.price
@@ -533,7 +577,7 @@ exports.bidPrice = asyncHandler(async (req, res, next) => {
        if(!bidTransAction.success){
          return next(new ErrorResponse("Wallet transaction failed",500))
        }
-       const bidTransActionA=await walletUpdaterApp(1,req.user._id,bidAmount,"Driver bid cost","truck")
+       const bidTransActionA=await walletUpdaterApp(0,req.user._id,bidAmount,"Driver bid cost","truck")
        if(!bidTransActionA.success){
          return next(new ErrorResponse("if your wallet amount change call ashAdmin",500))
        }
@@ -576,7 +620,7 @@ exports.bidPrice = asyncHandler(async (req, res, next) => {
      if(!bidTransAction.success){
        return next(new ErrorResponse("Wallet transaction failed",500))
      }
-     const bidTransActionA=await walletUpdaterApp(1,req.user._id,bidAmount,"Driver bid cost","truck")
+     const bidTransActionA=await walletUpdaterApp(0,req.user._id,bidAmount,"Driver bid cost","truck")
      if(!bidTransActionA.success){
        return next(new ErrorResponse("if your wallet amount change call ashAdmin",500))
      }
@@ -853,6 +897,26 @@ exports.bidPriceNew = asyncHandler(async (req, res, next) => {
 
   //? find resourse
   const order=await Order.findById(req.params.id)
+  const validate = await getUSER(req.user._id)
+    if (!validate.data.isActive){
+      return res.status(401).json({
+        success : false,
+        payload : {
+          error : 'the requester is not active....'
+        }
+      })
+    }
+  if (order.requster._id){
+    const validate = await getUSER(order.requster._id)
+    if (!validate.data.isActive){
+      return res.status(401).json({
+        success : false,
+        payload : {
+          error : 'the requester is not active....'
+        }
+      })
+    }
+  }
   const log=await Logs.findOne({orderId:req.params.id})
   const driver=await Truck.findOne({"user._id":req.user._id})
   const newBid=req.params.price

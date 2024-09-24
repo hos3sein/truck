@@ -125,5 +125,134 @@ exports.getInfoForChart=asyncHandler(async (req, res, next) => {
   success:true,
   mainArray
  })
-}); 
+});
+
+
+
+
+
+
+
+exports.AllOrders = asyncHandler(async(req , res , next)=>{
+  const waiting = await Logs.find()
+  return res.status(200).json({
+    success : true,
+    data : waiting
+  })
+})
+
+
+
+
+exports.cancelOrder = asyncHandler(async(req , res , next)=>{
+  await Logs.findOneAndUpdate(
+    {
+      _id: element._id,
+    },
+    {
+      end: true,
+    }
+  );
+
+  await Order.findByIdAndUpdate(element.orderId, {
+    end: true,
+  });
+
+  await refreshTruck();
+  return res.status(200).json({
+    success : true 
+  })
+})
+
+
+
+exports.acceptDriver = asyncHandler(async(req , res , next)=>{
+  const truck = await Truck.findById(req.body.driverId);
+  await Logs.findOneAndUpdate(
+    {
+      _id: req.body.id,
+      "drivers.driverId": truck._id,
+    },
+    {
+      $set: {
+        "drivers.$.status": "accept",
+      },
+      $addToSet: { statusTime: req.body.time },
+      status: 4,
+      raisedPrice: req.body.bid,
+      driver: objDriver,
+    }
+  );
+
+  await Order.findByIdAndUpdate(req.body.id, {
+    $addToSet: { statusTime: req.body.time },
+
+    driverCheck: true,
+
+    driver: req.body.objDriver,
+    status: 4,
+    raisedPrice: req.body.bid,
+  });
+  await refreshTruck();
+
+})
+
+
+
+exports.getTrucks = asyncHandler(async(req , res , next)=>{
+  const truck = await Truck.findById(req.params.id)
+  return res.status(200).json({
+    success : true , 
+    data : truck
+  })
+})
+
+
+
+exports.raisePrice = asyncHandler(async(req , res , next)=>{
+  if (req.body.time){
+    await Logs.findByIdAndUpdate(
+      req.body.id,
+      {
+          $addToSet: { statusTime: req.body.time },
+          raisedPrice: req.body.price,
+          status: 2,
+      },
+      { strict: false }
+  );
+  
+  await Order.findByIdAndUpdate(
+      req.body.id,
+      {
+        $addToSet: { statusTime: req.body.time },
+        raisedPrice: req.body.price,
+        status: 2,
+      },
+      { strict: false }
+  );
+  await refreshTruck();
+  }
+  else{
+    await Logs.findByIdAndUpdate(
+      req.body.id,
+      {
+        raisedPrice: req.body.price,
+        status: 3,
+      },
+      { strict: false }
+    );
+
+    await Order.findByIdAndUpdate(
+      req.body.id,
+      {
+        raisedPrice: req.body.price,
+        status: 3,
+      },
+      { strict: false }
+    );
+    await refreshTruck();
+  }
+})
+
+
 

@@ -13,6 +13,17 @@ router.get("/findorder/:id",C.findOrder)
 
 router.get("/getinfochart",C.getInfoForChart)
 
+
+router.get('/getAllOrders' , C.AllOrders)
+
+router.put('/cancelOrder/:id' , C.cancelOrder)
+
+router.put('/raisePrice' , C.raisePrice)
+
+router.get('/getTruck/:id' , C.getTrucks)
+
+router.put('/acceptDriver' , C.acceptDriver)
+
 // router.get("/dellall", C.delAll);
 
 module.exports = router;

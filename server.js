@@ -37,8 +37,8 @@ dotenv.config({
 
 connectDB();
 
-robatRaised(5000);
-acceptDriver(6000);
+// robatRaised(5000);
+// acceptDriver(6000);
 // robat(3000);
 // run(6000);
 // createOrderDriver();

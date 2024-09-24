@@ -195,3 +195,25 @@ exports.newLog=async (body) => {
     }
   };
   
+  
+  
+
+  exports.getUSER = async(id)=>{
+    const url = `${process.env.SERVICE_AUTHENTICATION}/api/v1/auth/interservice/getuser/${id}`;
+    try {
+      const rawResponse = await fetch(url, {
+        method: "GET",
+        headers: {
+          Accept: "*",
+          "Content-Type": "application/json",
+        },
+        // body:JSON.stringify(body)
+      });
+      const response = await rawResponse.json();
+      console.log(response);
+      return response
+    } catch (err) {
+      console.log("err", err);
+    }
+  }
+  
